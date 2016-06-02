@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Account</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/js/lib/jquery.js"></script>
+    <script>
+        function args(input) {
+            var url = decodeURIComponent(window.location.search.substring(1));
+            var args = url.split("&"), arg;
+            for (var i = 0; i < args.length; i++) {
+                arg = args[i].split("=");
+                if (arg[0] === input) return arg[1] === undefined ? true : arg[1];
+            }
+        }
+
+        $(function() {
+            if (args("e")) {
+                $(".error").show();
+                $("#error-text").text(args("e"));
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="error" style="display:none;">
+        <b>Error:</b> <span id="error-text">undefined</span>
+    </div>
+    <form method="POST" action="/api/user.create">
+        <input name="username" type="text" placeholder="Username" autofocus required>
+        <input name="password" type="password" placeholder="Password" autocomplete="false" required>
+        <input name="email" type="text" placeholder="Email" autocomplete="false">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
