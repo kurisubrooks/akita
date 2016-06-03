@@ -8,7 +8,6 @@ const _ = require("lodash");
 
 // Express Addons
 const postman = require("body-parser");
-const session = require("express-session");
 const cookies = require("cookie-parser");
 const elogger = require("morgan");
 
@@ -26,15 +25,13 @@ app.use(elogger("short"));
 app.use(cookies(keychain.session));
 app.use(postman.json());
 app.use(postman.urlencoded({ extended: true }));
-app.use(session({
-    secret: keychain.session,
-    resave: true,
-    saveUninitialized: true
-}));
+
+// Storage
+var users = {};
 
 // Express Serve
 app.get("/", (req, res) => {
-    if (req.session.token && core.auth.token(req.session.token)) {
+    if (req.cookies.token && core.auth.token(req.cookies.token)) {
         // user already logged in
         res.redirect("/chat");
     } else {
@@ -43,7 +40,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-    if (req.session.token && core.auth.token(req.session.token)) {
+    if (req.cookies.token && core.auth.token(req.cookies.token)) {
         // user already logged in
         res.redirect("/chat");
     } else {
@@ -52,10 +49,10 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/chat", (req, res) => {
-    if (req.session.token && core.auth.token(req.session.token)) {
+    if (req.cookies.token && core.auth.token(req.cookies.token)) {
         res.sendFile(path.join(__dirname, "public", "chat.html"));
     } else {
-        res.redirect("/chat");
+        res.redirect("/login");
     }
 });
 
@@ -64,14 +61,13 @@ app.get("/create_account", (req, res) => {
 });
 
 app.get("/logout", (req, res) => {
-    delete req.session.user;
-    delete req.session.token;
+    res.clearCookie("user");
+    res.clearCookie("token");
     res.redirect("/login");
 });
 
 // API
 app.post("/api/auth.login", (req, res) => {
-    var session = req.session;
     var data = req.body;
     var username = data.username.toLowerCase();
     var password = data.password;
@@ -80,10 +76,8 @@ app.post("/api/auth.login", (req, res) => {
     console.log(`auth.login - ${hash.ok}, ${data.username}, ${req.ip}`);
 
     if (hash.ok) {
-        session.user = hash.username;
-        session.token = hash.token;
-        //res.cookie("user", hash.username);
-        //res.cookie("token", hash.token);
+        res.cookie("user", hash.username);
+        res.cookie("token", hash.token);
         res.redirect("/chat");
     } else {
         res.redirect(`/login?e=${encodeURIComponent(hash.code)}`);
@@ -91,7 +85,6 @@ app.post("/api/auth.login", (req, res) => {
 });
 
 app.post("/api/user.create", (req, res) => {
-    var session = req.session;
     var data = req.body;
     var push = core.auth.add_user(data);
 
@@ -106,7 +99,34 @@ app.use((req, res) => res.json({ ok: false, code: "ERR_NOT_FOUND" }));
 
 // WebSocket
 io.on("connection", (socket) => {
+    socket.on("auth.user", (data) => {
+        if (data.ok) {
+            socket.token = data.token;
+            socket.username = data.username;
 
+            socket.emit("auth.user", {
+                "ok": true,
+                "username": socket.username,
+                "token": socket.token
+            });
+        } else {
+            socket.emit("error", {
+                "ok": false,
+                "code": "ERR_BAD_AUTH",
+                "disconnect": true
+            });
+        }
+    });
+
+    socket.on("chat.post", (data) => {
+        core.save(data);
+        io.emit("chat.post", {
+            "ok": true,
+            "ts": data.ts,
+            "username": socket.username,
+            "message": core.safe(data.message)
+        });
+    });
 });
 
 // Start Server
