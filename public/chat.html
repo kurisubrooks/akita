@@ -1,20 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Chat</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="/assets/css/main.css" rel="stylesheet">
     <script src="/assets/js/lib/jquery.js"></script>
+    <script src="/assets/js/lib/socket.js"></script>
+    <script src="/assets/js/lib/moment.js"></script>
+    <script src="/assets/js/lib/cookie.js"></script>
+    <script src="/assets/js/client.js"></script>
 </head>
 <body>
-    <div class="error" style="display:none;">
-        <b>Error:</b> <span id="error-text">undefined</span>
-    </div>
-    <form method="POST" action="/api/auth.login">
-        <input id="in-user" name="username" type="text" placeholder="Username" autofocus required>
-        <input id="in-pass" name="password" type="password" placeholder="Password" autocomplete="false" required>
-        <button type="submit">Sign In</button>
-    </form>
-    <a href="/create_account">Create Account</a>
+
+    <header>
+
+    </header>
+    <main>
+        <div class="sidebar">
+
+        </div>
+        <div class="client">
+            <div class="messages">
+                <!--<div class="message">
+                    <div class="message-avatar"></div>
+                    <div class="message-user">kurisu</div>
+                    <div class="message-msg">test</div>
+                </div>-->
+            </div>
+            <div class="chatbar">
+                <form class="chat_form" action="">
+                    <input name="chat" type="text" class="chat_input" autocomplete="off">
+                </form>
+            </div>
+        </div>
+    </main>
+
 </body>
 </html>
