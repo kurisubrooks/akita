@@ -13,12 +13,16 @@ function key() {
     return crypto.randomBytes(48).toString("hex");
 }
 
+exports.safe = function(input) {
+    return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+};
+
 exports.config = {
     port: 8080
 };
 
-exports.core = {
-
+exports.save = function(data) {
+    
 };
 
 exports.auth = {
@@ -52,7 +56,7 @@ exports.auth = {
         var hash  = crypto.createHash("sha256").update(data.password + salt).digest("hex");
         var exist = _.findKey(db.users, { username: data.username });
 
-        if (exist) return { ok: false, ts: time(), code: "ERR_USER_EXISTS", username: data.username };
+        if (exist) return { ok: false, ts: time(), code: "ERR_USER_EXIST", username: data.username };
 
         db.users[id] = {
             type: 0,
